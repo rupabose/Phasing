@@ -30,6 +30,22 @@ import argparse
 import logging
 from subprocess import check_output
 from sys import argv
+import sys
+
+
+
+logging.basicConfig(format="%(relativeCreated) 9d %(message)s", level=logging.DEBUG)
+
+# Add another handler for logging debugging events (e.g. for profiling)
+# in a separate stream that can be captured.
+log = logging.getLogger()
+debug_handler = logging.StreamHandler(sys.stdout)
+debug_handler.setLevel(logging.DEBUG)
+debug_handler.addFilter(filter=lambda record: record.levelno <= logging.DEBUG)
+log.addHandler(debug_handler)
+
+
+
 
 #let's build a super tiny example to work with
 df=pd.read_csv('~/testpy/rupasandbox/phasing_test_file_pairs.csv', sep="\t")
@@ -124,7 +140,7 @@ def model_3(sequences, lengths, args, batch_size=None, include_prior=True):
         # for i in range(num_samples):
         #     lengths[i]=sequence_length #change it to np.size(data[1])/2
 
-    hidden_dim = 2  # reference or alternative
+    hidden_dim = int(2)  # reference or alternative
     #this runs the prior only once to establish the transition probabilities
     """   
     Need to figure out how to write the prior as a function of the possibilities at each position
@@ -133,17 +149,18 @@ def model_3(sequences, lengths, args, batch_size=None, include_prior=True):
     """
     with poutine.mask(mask=include_prior):
         probs_w = pyro.sample(
-            "probs_w", dist.Beta(0.5, 0.5).expand([2]).to_event(1)
+            "probs_w", dist.Dirichlet(0.5 * torch.eye(hidden_dim)+0.5).expand([2]).to_event(1) #instead of 0.5, 0.5, we assigned to the hidden_dimdim
         )
         # underlying genotype
         probs_x = pyro.sample(
-            "probs_x", dist.Beta(0.5,0.5).expand([2]).to_event(1)
+            "probs_x", dist.Dirichlet(0.5 * torch.eye(hidden_dim)+0.5).expand([2]).to_event(1)
         )
         # observed genotype
         probs_y = pyro.sample(
             "probs_y",
-            dist.Beta(0.99,0.1).expand([2,2]).to_event(2)
+            dist.Beta(0.999,0.001).expand([hidden_dim, hidden_dim, data_dim]).to_event(3) #instead of 2,2,2 added hidden_dim, hidden_dim, hidden_dimd
         )
+    calls_plate = pyro.plate("calls", data_dim, dim=-1)
     with pyro.plate("sequences", num_samples, batch_size, dim=-2) as batch:
         lengths = lengths[batch]
         w, x = torch.tensor(0).to(torch.long), torch.tensor(0).to(torch.long)
@@ -151,26 +168,27 @@ def model_3(sequences, lengths, args, batch_size=None, include_prior=True):
             with poutine.mask(mask=torch.BoolTensor(t < lengths).unsqueeze(-1)) as unsqueezed_mask:
                 w = pyro.sample(
                     "w_{}".format(t),
-                    dist.Bernoulli(probs_w[w]),
+                    dist.Categorical(probs_w[w]), #instead of Bernoulli
                     infer={"enumerate": "parallel"},
                 ).to(torch.long)
                 # print("w_{}".format(t), w)
                 x = pyro.sample(
                     "x_{}".format(t),
-                    dist.Bernoulli(probs_x[x]),
+                    dist.Categorical(probs_x[x]),
                     infer={"enumerate": "parallel"},
                 ).to(torch.long)
                 # print("x_{}".format(t), x)
-                y = pyro.sample(
-                    "y_{}".format(t),
-                    dist.Bernoulli(probs_y[x,w]),
-                    obs=sequences[batch, t],
-                    )
+                with calls_plate as calls:
+                    y = pyro.sample(
+                        "y_{}".format(t),
+                        dist.Bernoulli(probs_y[x,w, calls]), #added dep on calls
+                        obs=sequences[batch, t],
+                        )
                 # print("y_{}".format(t), y)
-                if t <= 2:
-                    print("w_{}.shape".format(t), w.shape)
-                    print("x_{}.shape".format(t), x.shape)
-                    print("y_{}.shape".format(t), y.shape)
+                # if t <= 2:
+                #     print("w_{}.shape".format(t), w.shape)
+                #     print("x_{}.shape".format(t), x.shape)
+                #     print("y_{}.shape".format(t), y.shape)
 
 
 
@@ -207,6 +225,7 @@ def main(args):
     }
 
 
+
     assert len(data["train"]["sequence_lengths"]) == len(data["train"]["sequences"])
 
 
@@ -230,10 +249,9 @@ def main(args):
     pyro.set_rng_seed(args.seed)
     pyro.clear_param_store()
 
-    # We'll train using MAP Baum-Welch, i.e. MAP estimation while marginalizing
-    # out the hidden state x. This is accomplished via an automatic guide that
-    # learns point estimates of all of our conditional probability tables,
-    # named probs_*.
+    # AutoDelta is an automatic guide that learns the point estimates of the conditional probs we named probs_{}. 
+    # We'll train using MAP Baum-Welch, which marginalizes on hidden states (w and x).
+    # 
     guide = AutoDelta(
          handlers.block(model, expose_fn=lambda msg: msg["name"].startswith("probs_"))
      )
@@ -297,6 +315,9 @@ def main(args):
             "time to compile: {} s.".format(elbo._differentiable_loss.compile_time)
         )
 
+    # We evaluate on the entire training dataset,
+    # excluding the prior term so our results are comparable across models.
+    train_loss = elbo.loss(model, guide, sequences, lengths, include_prior=False)
     logging.info("training loss = {}".format(train_loss / num_observations))
 
     # Finally we evaluate on the test dataset.
@@ -304,8 +325,8 @@ def main(args):
     logging.info(
         "Evaluating on {} test sequences".format(len(data["test"]["sequences"]))
     )
-    sequences = data
-    lengths = data
+    sequences = data["test"]["sequences"]
+    lengths = data["test"]["sequence_lengths"]
     if args.truncate:
         lengths = lengths.clamp(max=args.truncate)
     num_observations = float(lengths.sum())
