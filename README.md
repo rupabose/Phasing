@@ -1,6 +1,6 @@
 # Phasing
 
-##Basic plans outline
+## Basic plans outline
 Basic idea is: 
 each element of the ordered pair is from either w (parent1)  or x (parent2)
 can iterate through each entry s.t. for each y in train_set, 
@@ -21,7 +21,7 @@ of 0/1s occurring in that length of ordered pairs (0|1 or 1|0) in the sample, us
 maybe something like the dmers match or deepu's recombination program? needs to be windowed
 
 
-###WINDOWS
+### WINDOWS
 -STEP 1: WINDOWS
   To Build searchable windows:
  -1) We can first change the datastructure fed in to retain the POS and CHR so we can be aware of the locations by cM of the SNPs.
@@ -35,7 +35,7 @@ maybe something like the dmers match or deepu's recombination program? needs to 
             and so on…
  -4) Define a way for the input to be broken into these overlapping windows for searching  
 
-###sorting based on homozygosity
+### sorting based on homozygosity
 -STEP 2: Sorting subsets of individuals based on homozygosity to reduce search problem
  -1) defining homozygosity within the windows 
  -2) define homozygosity patterns and how to subset
@@ -45,7 +45,7 @@ maybe something like the dmers match or deepu's recombination program? needs to 
 
 if no matches in the windows, return to step 1, and make window sizes smaller to start, then continue through step 2
 
-###then define search based on windows
+### then define search based on windows
 -STEP 3: Define search process
  -1) first, catalogue homozygosity for the sample individual and generate the homozygosity pattern for each window
  -2) then break pattern into windows
@@ -59,6 +59,6 @@ treat the subset of the haplotype space (reference) as the prior
 Sample from it and see how it fits
 then update the output (posterior) based on this
 
-##Backlog/future plans:
--1)turn windows into _sliding windows_
--2)error inference - see if we can figure out a way to infer errors in genotype calls and return them as missing data for imputation later
+## Backlog/future plans:
+- 1)turn windows into _sliding windows_
+- 2)error inference - see if we can figure out a way to infer errors in genotype calls and return them as missing data for imputation later
