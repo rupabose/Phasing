@@ -66,4 +66,5 @@ then update the output (posterior) based on this
 
 ## Backlog/future plans:
 - turn windows into _sliding windows_
+- infer best window size and overlap size (assuming our method works using windows)
 - error inference - see if we can figure out a way to infer errors in genotype calls and return them as missing data for imputation later
