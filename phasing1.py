@@ -96,16 +96,60 @@ maybe something like the dmers match or deepu's recombination program? needs to 
 
 #WINDOWS
 """ STEP 1: WINDOWS
-# 1)define 25cM wide windows (or maybe based on #SNPs), first one is centered at 12.5cM, and then each successive one is centered 10cM 
-    after the previous one's center. window 1 is centered at 12.5, W2 at 22.5, W3 at 32.5 and so on ...
+To Build searchable windows:
+ 1) We can first change the datastructure fed in to retain the POS and CHR so we can be aware of the locations by cM of the SNPs.
+      a)This means that I'll just move over the changes from the maketestfile into the phasing1.py, so it won't take long
+ 2) Then have a cM-POS map fed into the model and figure out how to define cM in the model and keep track of windows by position for each chromosome
+ 3) Define the window structure based on the map as 25cM wide, and in terms of where it is centered.
+        first window centered at 12.5cM (so it goes from 0-25cM)
+        each next window is centered 12.5cM after the previous, so there is an overlap
+            2nd window: centered at 25cM (from 12.5cM to 37.5cM)
+            3rd window: centered at 37.5cM (from 25cM to 50cM)
+            and so on…
+ 4) Define a way for the input to be broken into these overlapping windows for searching
  
 """
-#  
+#   input a centimorgan map for chr20
+#input maps for each of the populations:
+pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR', 'GIH', 'GWD', 'IBS', 'ITU', 'KHV', 'LWK', 'MSL', 'MXL', 'PEL', 'PJL', 'PUR', 'STU', 'TSI', 'YRI']
+
+pop_recomb_maps = {}
+recomb_map_filename_pattern = "~/testpy/rupasandbox/Phasing/hg38/{}/{}_recombination_map_hg38_chr_20.bed"
+
+for pop_slug in pops:
+    pop_recomb_maps[pop_slug] = pd.read_csv(recomb_map_filename_pattern.format(pop_slug, pop_slug), sep="\t")
+#for the maps, convert recombination rate to centimorgans using simple arithmetic
+#((end-start)*recombination rate per bp * 100)=cM 
+for population in pop_recomb_maps:
+    df=pop_recomb_maps[population]
+    for i in range(len(df)):
+        start_bp=df['Start']
+        end_bp=df['End']
+        recrate=df['reco_rate_per_base_per_generation']
+        cMdist=(end_bp-start_bp)*recrate*100
+    df.insert(4,"cM", cMdist)
+    pop_recomb_maps[population]=df
+
+#above part works!    
+
+
+#1cM is roughly 100,000 base pairs
+#25cM is roughly 2.5million base pairs
+
+#reformat into cM instead of recombination rate per base pair per generation
+#
+#   define 25cM windows starting at 0, 12.5, 25, 37.5 ...
+#   link the windows to chr/bp positions
+#   organize SNPs in input into the windows   
+
 
 #sorting based on homozygosity
 """ STEP 2: Sorting subsets of individuals based on homozygosity to reduce search problem
 # 1) defining homozygosity within the windows 
-# 2) sorting samples into 'subsets' based on homozygosity matches in windows
+# 2) define homozygosity patterns and how to subset
+# 3) sorting samples into 'subsets' based on homozygosity matches in windows
+    if a sample has the same 001001 homozygosity pattern it goes in subset 1 with all the others that do
+    if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
 
 """
 
@@ -396,3 +440,9 @@ if __name__ == "__main__":
 
 
 
+"""
+At the end/updates for later: 
+error inference - see if we can figure out a way to infer errors in genotype calls 
+and return them as missing data for imputation later
+
+"""
