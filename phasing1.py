@@ -132,6 +132,32 @@ for population in pop_recomb_maps:
 
 #above part works!    
 
+"""
+To build the windows, let's first make an actual map of where every 0.5cM  falls using the dataframe
+for each population. 
+    To do this, we'll make a sum_cM column which will only have an output every 0.5cM
+    Then we'll add the column throughout the dictionary, and take the average positions where 0.5, 1, 1.5 etc occur
+    And output that as our window map.
+"""
+sum=0
+x1=0
+x2=1000000000
+list=[x*0.5 for x in range(2*x1,2*x2 +1)]
+
+for population in pop_recomb_maps:
+    df=pop_recomb_maps[population]
+    for i in range(len(df)):
+        sum=sum+df['cM']
+        if sum in list:
+            df.insert(5,  sum)
+
+window_bps_map= {}
+for population in pop_recomb_maps:
+    window_bps_map[population]=
+    for i in range(len(df)):
+        if df['sum'] in list:
+            
+
 
 #1cM is roughly 100,000 base pairs
 #25cM is roughly 2.5million base pairs
