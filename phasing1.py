@@ -143,19 +143,37 @@ sum=0
 x1=0
 x2=1000000000
 list=[x*0.5 for x in range(2*x1,2*x2 +1)]
-
+first_call=0
+last_call=first_call
+next_call=0.5
 for population in pop_recomb_maps:
     df=pop_recomb_maps[population]
     for i in range(len(df)):
         sum=sum+df['cM']
         if sum in list:
             df.insert(5,  sum)
+            last_call=sum
+            next_call=sum+0.5
+            print(last_call)
+            print(next_call)
+        else:
+            #if (sum-df['cM'])>last_call and sum>next_call: #can just write if sum>next_call
+            if sum>next_call:
+                df.insert(5,sum)
+                next_call=next_call+0.5
+
+
+#print all positions where there is a sum in the last column
 
 window_bps_map= {}
 for population in pop_recomb_maps:
-    window_bps_map[population]=
+    window_bps_map[population]=[0,]
     for i in range(len(df)):
+         start_bp=df['Start']
+        end_bp=df['End']
+        
         if df['sum'] in list:
+            window_bps_map[population].append()
             
 
 
