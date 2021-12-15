@@ -111,10 +111,11 @@ To Build searchable windows:
 """
 #   input a centimorgan map for chr20
 #input maps for each of the populations:
-pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR', 'GIH', 'GWD', 'IBS', 'ITU', 'KHV', 'LWK', 'MSL', 'MXL', 'PEL', 'PJL', 'PUR', 'STU', 'TSI', 'YRI']
+# pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR', 'GIH', 'GWD', 'IBS', 'ITU', 'KHV', 'LWK', 'MSL', 'MXL', 'PEL', 'PJL', 'PUR', 'STU', 'TSI', 'YRI']
+pops=['CDX']
 
 pop_recomb_maps = {}
-recomb_map_filename_pattern = "~/testpy/rupasandbox/Phasing/hg38/{}/{}_recombination_map_hg38_chr_20.bed"
+recomb_map_filename_pattern = "~/testpy/rupasandbox/Phasing/hg38/{}/{}_recombination_map_hg38_chr_17.bed"
 
 for pop_slug in pops:
     pop_recomb_maps[pop_slug] = pd.read_csv(recomb_map_filename_pattern.format(pop_slug, pop_slug), sep="\t")
@@ -139,28 +140,80 @@ for each population.
     Then we'll add the column throughout the dictionary, and take the average positions where 0.5, 1, 1.5 etc occur
     And output that as our window map.
 """
-sum=0
+cMsum=0
 x1=0
-x2=1000000000
-list=[x*0.5 for x in range(2*x1,2*x2 +1)]
+x2=250
+# List=[x*0.5 for x in range(2*x1,2*x2 +1)]
 first_call=0
 last_call=first_call
 next_call=0.5
-for population in pop_recomb_maps:
+
+window_size_cM = 25
+
+# in the format of window boundaries
+# the first element is always with the first BP
+the_first_BP = df['Start'][0]
+pop_windows = {pop: list((the_first_BP,)) for pop in pop_recomb_maps.keys()}
+
+
+# ASSUMPTIONS:
+# - window size is always bigger than any region size (that's a very bad assumption)
+for population in pop_windows.keys():
     df=pop_recomb_maps[population]
-    for i in range(len(df)):
-        sum=sum+df['cM']
-        if sum in list:
-            df.insert(5,  sum)
-            last_call=sum
-            next_call=sum+0.5
-            print(last_call)
-            print(next_call)
-        else:
-            #if (sum-df['cM'])>last_call and sum>next_call: #can just write if sum>next_call
-            if sum>next_call:
-                df.insert(5,sum)
-                next_call=next_call+0.5
+    cM_left = window_size_cM
+    sum_BP = 0
+    p = 1
+
+    i = 0
+    size_BP = (df['End'][i]-df['Start'][i])
+    size_cM = df['cM'][i]
+
+    def next_i_region():
+        global i, size_BP, size_cM
+        i += 1 # we've done with this region, iterate to the next
+        size_BP = (df['End'][i]-df['Start'][i])
+        size_cM = df['cM'][i]
+
+    def add_windows_boundary_point():
+        global sum_BP
+        pop_windows[population].append(pop_windows[population][-1] + int(sum_BP))
+
+    while i < len(df):
+
+        if cM_left > size_cM: # if what's left to fill in the window is more than what's left in the current region
+            sum_BP  += size_BP # length of recomb region in BP
+            cM_left -= size_cM
+            
+            i += 1 # we've done with this region, iterate to the next region
+            if i >= len(df): # if we don't have the next region
+                add_windows_boundary_point() # add the current window, whatever size it is
+                break
+            size_BP = (df['End'][i]-df['Start'][i])
+            size_cM = df['cM'][i]
+        else: # if cM_left <= size_cM*p: # we'll have some of the region left for the next window to fill
+            p = cM_left/size_cM
+            sum_BP  += size_BP*p
+            cM_left -= size_cM*p
+
+            size_BP -= size_BP*p
+            size_cM -= size_cM*p
+            # we've NOT done with this region, we'll carry out the p, so
+            # we add the remaining proportion of the region to the next window
+
+        if cM_left == 0: # our window is full
+            # we've done with this window, iterate to the next window
+            add_windows_boundary_point()
+            # proceed filling the next window
+            cM_left = window_size_cM
+            sum_BP = 0
+
+
+print(pop_windows)
+
+
+
+
+
 
 
 #print all positions where there is a sum in the last column
@@ -169,7 +222,7 @@ window_bps_map= {}
 for population in pop_recomb_maps:
     window_bps_map[population]=[0,]
     for i in range(len(df)):
-         start_bp=df['Start']
+        start_bp=df['Start']
         end_bp=df['End']
         
         if df['sum'] in list:
@@ -434,7 +487,7 @@ def main(args):
 
     # We expect models with higher capacity to perform better,
     # but eventually overfit to the training set.
-    capacity = sum(
+    capacity = cMsum(
         value.reshape(-1).size(0) for value in pyro.get_param_store().values()
     )
     logging.info("model_{} capacity = {} parameters".format(args.model, capacity))
