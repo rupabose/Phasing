@@ -111,8 +111,8 @@ To Build searchable windows:
 """
 #   input a centimorgan map for chr20
 #input maps for each of the populations:
-# pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR', 'GIH', 'GWD', 'IBS', 'ITU', 'KHV', 'LWK', 'MSL', 'MXL', 'PEL', 'PJL', 'PUR', 'STU', 'TSI', 'YRI']
-pops=['CDX']
+pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR', 'GIH', 'GWD', 'IBS', 'ITU', 'KHV', 'LWK', 'MSL', 'MXL', 'PEL', 'PJL', 'PUR', 'STU', 'TSI', 'YRI']
+#pops=['CDX']
 
 pop_recomb_maps = {}
 recomb_map_filename_pattern = "~/testpy/rupasandbox/Phasing/hg38/{}/{}_recombination_map_hg38_chr_17.bed"
@@ -178,7 +178,7 @@ for population in pop_windows.keys():
         global sum_BP
         pop_windows[population].append(pop_windows[population][-1] + int(sum_BP))
 
-    while i < len(df):
+    while True:
 
         if cM_left > size_cM: # if what's left to fill in the window is more than what's left in the current region
             sum_BP  += size_BP # length of recomb region in BP
@@ -209,6 +209,25 @@ for population in pop_windows.keys():
 
 
 print(pop_windows)
+pop_subsets={}
+for window in pop_windows:
+    for individual in df:
+        individualdf=df[individual]#pop_subsets[individual]=[]
+        individual_window_df=individualdf[window['start']:window['end']]
+        homozyg_sig=''
+        for g1,g2 in individual_window_df:
+            if g1==g2:
+                homozyg_sig+=f"{newdf['POS']}{g1}"
+        if pop_subsets.get(homozyg_sig) is None:
+            pop_subsets[homozyg_sig]=[individual]
+        else:
+            pop_subsets[homozyg_sig].append(individual)
+        
+
+
+
+                
+                
 
 
 
@@ -218,15 +237,14 @@ print(pop_windows)
 
 #print all positions where there is a sum in the last column
 
-window_bps_map= {}
-for population in pop_recomb_maps:
-    window_bps_map[population]=[0,]
-    for i in range(len(df)):
-        start_bp=df['Start']
-        end_bp=df['End']
-        
-        if df['sum'] in list:
-            window_bps_map[population].append()
+# window_bps_map= {}
+# for population in pop_recomb_maps:
+#     window_bps_map[population]=[0,]
+#     for i in range(len(df)):
+#         start_bp=df['Start']
+#         end_bp=df['End']
+#         if df['sum'] in list:
+#             window_bps_map[population].append()
             
 
 
@@ -249,6 +267,10 @@ for population in pop_recomb_maps:
     if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
 
 """
+for indiv in df:
+    for call in indiv:
+        if (x,y)==(y,x):
+
 
 """
 if no matches in the windows, return to step 1, and make window sizes smaller to start, then continue through step 2
