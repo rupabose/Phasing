@@ -267,9 +267,6 @@ for window in pop_windows:
     if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
 
 """
-for indiv in df:
-    for call in indiv:
-        if (x,y)==(y,x):
 
 
 """
