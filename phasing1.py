@@ -217,16 +217,6 @@ for pop in pop_windows:
     for i in range(1,len(df)):
         windows[pop].append((df[i-1],df[i]))
 
-average_windows=[]
-
-#trying a new way to average window starts
-emptydf=
-for pop in windows:
-    start=[]
-    end=[]
-    for x,y in windows[pop]:
-        start_{pop}.append(x)
-        end_{pop}.append(y)
     
 #input hapmap recombination map
 recomb_hapmap_chr20=pd.read_csv("~/testpy/rupasandbox/Phasing/hapmap_recombination_rate_hg38/hapmap_recomb_hg38_chr20.txt", sep=" ")
