@@ -236,7 +236,6 @@ for i in range(len(windowpoints)-1):
    newpoint=(windowpoints[i],windowpoints[i+1])
    windows.append(newpoint)
 
-
 pop_subsets={}
 for (windowstart,windowend) in windows:
     for individual in df:
