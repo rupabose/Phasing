@@ -217,6 +217,13 @@ for pop in pop_windows:
     for i in range(1,len(df)):
         windows[pop].append((df[i-1],df[i]))
 
+average_windows=[]
+
+for i in range(len(pop_windows[pop])):
+    for pop in pop_windows:
+        average_windows[i]=windows[pop][i]
+
+        
 
 pop_subsets={}
 for window in pop_windows:
