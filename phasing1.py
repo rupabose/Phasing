@@ -235,7 +235,7 @@ windows=[]
 for i in range(len(windowpoints)-1):
    newpoint=(windowpoints[i],windowpoints[i+1])
    windows.append(newpoint)
-   
+
 """ STEP 2: Sorting subsets of individuals based on homozygosity to reduce search problem
 # 1) defining homozygosity within the windows 
 # 2) define homozygosity patterns and how to subset
@@ -244,26 +244,31 @@ for i in range(len(windowpoints)-1):
     if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
 
 """
-pop_subsets={}
-for (windowstart,windowend) in windows:
+pop_subsets={} 
+for (windowstart,windowend) in windows: #iterating through each window
     for individual in df:
-        individualdf=df[individual]#pop_subsets[individual]=[]
+        individualdf=df[individual] #so we can iterate through the genotype calls of each individual easily
         individual_window_df=individualdf[windowstart:windowend]
-        homozyg_sig=''
+        homozyg_sig='' #starting a new homozygous signature as a string, which represents the homozyg pattern of this individual
         for g1,g2 in individual_window_df:
-            if g1==g2:
-                homozyg_sig+=f"{newdf['POS']}|{g1}"
-        if pop_subsets.get(homozyg_sig) is None:
-            pop_subsets[homozyg_sig]=[individual]
+            if g1==g2: #true if it is homozygous (e.g. 0,0 or 1,1)
+                homozyg_sig+=f"{newdf['POS']}|{g1}" #we store position and the call, 0 or 1 for ref/alt
+        if pop_subsets.get(homozyg_sig) is None: #if this specific homozyg pattern in this window is not already represented, we add it
+            pop_subsets[homozyg_sig]=[individual] #we also add the individual under it
         else:
-            pop_subsets[homozyg_sig].append(individual)
-
-
+            pop_subsets[homozyg_sig].append(individual) #if this is already represented in the dict, then we just store that the individual has it too
 
 
 """
 if no matches in the windows, return to step 1, and make window sizes smaller to start, then continue through step 2
 """
+#search through pop_subsets 
+#first need to check that pop_subsets.keys()<len(df)
+#then check that each subset has at least 20 individuals in it 
+#if any of this is not true, then reduce window size and repeat until it's true
+
+
+
 
 #then define search based on windows
 """ STEP 3: Define search process
