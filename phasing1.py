@@ -229,17 +229,29 @@ for pop in windows:
         end_{pop}.append(y)
     
 #input hapmap recombination map
-recomb_map_hapmap_chr20=pd.read_csv("~/testpy/rupasandbox/Phasing/hapmap_recombination_rate_hg38/hapmap_recomb_hg38_chr20.txt", sep=" ")
+recomb_hapmap_chr20=pd.read_csv("~/testpy/rupasandbox/Phasing/hapmap_recombination_rate_hg38/hapmap_recomb_hg38_chr20.txt", sep=" ")
+x1=0
+x2=25
+window_cM=10
+listcM=[x*10 for x in range(x1,x2)]
+windowpoints=[]
+for element in listcM:
+    for i in range(len(recomb_hapmap_chr20)):
+        if recomb_hapmap_chr20['Genetic_Map(cM)'][i]>element and recomb_hapmap_chr20['Genetic_Map(cM)'][i-1]<element :
+            windowpoints.append(recomb_hapmap_chr20['Genetic_Map(cM)'][i])
+windowpoints.append(recomb_hapmap_chr20['Genetic_Map(cM)'][len(recomb_hapmap_chr20)-1])
 
-#sorting by homozygous pattern as homozyg_sig in the windows of the dataframe
-#creates 'populations' of homozyg sig sharing individuals from the reference panel
-#can search against these 'populations' using Deepu's recombination method and similarity matrix
+windows=[]
+for i in range(len(windowpoints)-1):
+   newpoint=(windowpoints[i],windowpoints[i+1])
+   windows.append(newpoint)
+
 
 pop_subsets={}
-for window in pop_windows:
+for (windowstart,windowend) in windows:
     for individual in df:
         individualdf=df[individual]#pop_subsets[individual]=[]
-        individual_window_df=individualdf[window['start']:window['end']]
+        individual_window_df=individualdf[windowstart:windowend]
         homozyg_sig=''
         for g1,g2 in individual_window_df:
             if g1==g2:
