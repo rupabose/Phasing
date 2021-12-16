@@ -210,7 +210,7 @@ for population in pop_windows.keys():
 
 print(pop_windows)
 
-windows={}
+windows=[]
 for pop in pop_windows:
     df=pop_windows[pop]
     windows[pop]=[]
@@ -219,9 +219,15 @@ for pop in pop_windows:
 
 average_windows=[]
 
-for i in range(len(pop_windows[pop])):
-    for pop in pop_windows:
-        average_windows[i]=windows[pop][i]
+#trying a new way to average window starts
+emptydf=
+for pop in windows:
+    start=[]
+    end=[]
+    for x,y in windows[pop]:
+        start_{pop}.append(x)
+        end_{pop}.append(y)
+    
 
         
 
