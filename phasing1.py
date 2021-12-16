@@ -235,7 +235,15 @@ windows=[]
 for i in range(len(windowpoints)-1):
    newpoint=(windowpoints[i],windowpoints[i+1])
    windows.append(newpoint)
+   
+""" STEP 2: Sorting subsets of individuals based on homozygosity to reduce search problem
+# 1) defining homozygosity within the windows 
+# 2) define homozygosity patterns and how to subset
+# 3) sorting samples into 'subsets' based on homozygosity matches in windows
+    if a sample has the same 001001 homozygosity pattern it goes in subset 1 with all the others that do
+    if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
 
+"""
 pop_subsets={}
 for (windowstart,windowend) in windows:
     for individual in df:
@@ -251,39 +259,6 @@ for (windowstart,windowend) in windows:
             pop_subsets[homozyg_sig].append(individual)
 
 
-
-#print all positions where there is a sum in the last column
-
-# window_bps_map= {}
-# for population in pop_recomb_maps:
-#     window_bps_map[population]=[0,]
-#     for i in range(len(df)):
-#         start_bp=df['Start']
-#         end_bp=df['End']
-#         if df['sum'] in list:
-#             window_bps_map[population].append()
-            
-
-
-#1cM is roughly 100,000 base pairs
-#25cM is roughly 2.5million base pairs
-
-#reformat into cM instead of recombination rate per base pair per generation
-#
-#   define 25cM windows starting at 0, 12.5, 25, 37.5 ...
-#   link the windows to chr/bp positions
-#   organize SNPs in input into the windows   
-
-
-#sorting based on homozygosity
-""" STEP 2: Sorting subsets of individuals based on homozygosity to reduce search problem
-# 1) defining homozygosity within the windows 
-# 2) define homozygosity patterns and how to subset
-# 3) sorting samples into 'subsets' based on homozygosity matches in windows
-    if a sample has the same 001001 homozygosity pattern it goes in subset 1 with all the others that do
-    if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
-
-"""
 
 
 """
