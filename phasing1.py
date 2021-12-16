@@ -148,7 +148,7 @@ first_call=0
 last_call=first_call
 next_call=0.5
 
-window_size_cM = 25
+window_size_cM = 10
 
 # in the format of window boundaries
 # the first element is always with the first BP
@@ -209,6 +209,15 @@ for population in pop_windows.keys():
 
 
 print(pop_windows)
+
+windows={}
+for pop in pop_windows:
+    df=pop_windows[pop]
+    windows[pop]=[]
+    for i in range(1,len(df)):
+        windows[pop].append((df[i-1],df[i]))
+
+
 pop_subsets={}
 for window in pop_windows:
     for individual in df:
