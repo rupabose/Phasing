@@ -210,7 +210,7 @@ for population in pop_windows.keys():
 
 print(pop_windows)
 
-windows=[]
+windows={}
 for pop in pop_windows:
     df=pop_windows[pop]
     windows[pop]=[]
@@ -228,8 +228,12 @@ for pop in windows:
         start_{pop}.append(x)
         end_{pop}.append(y)
     
+#input hapmap recombination map
+recomb_map_hapmap_chr20=pd.read_csv("~/testpy/rupasandbox/Phasing/hapmap_recombination_rate_hg38/hapmap_recomb_hg38_chr20.txt", sep=" ")
 
-        
+#sorting by homozygous pattern as homozyg_sig in the windows of the dataframe
+#creates 'populations' of homozyg sig sharing individuals from the reference panel
+#can search against these 'populations' using Deepu's recombination method and similarity matrix
 
 pop_subsets={}
 for window in pop_windows:
@@ -239,21 +243,11 @@ for window in pop_windows:
         homozyg_sig=''
         for g1,g2 in individual_window_df:
             if g1==g2:
-                homozyg_sig+=f"{newdf['POS']}{g1}"
+                homozyg_sig+=f"{newdf['POS']}|{g1}"
         if pop_subsets.get(homozyg_sig) is None:
             pop_subsets[homozyg_sig]=[individual]
         else:
             pop_subsets[homozyg_sig].append(individual)
-        
-
-
-
-                
-                
-
-
-
-
 
 
 
