@@ -263,10 +263,11 @@ for (windowstart,windowend) in windows: #iterating through each window
 if no matches in the windows, return to step 1, and make window sizes smaller to start, then continue through step 2
 """
 #search through pop_subsets 
+for (windowstart, windowend):
+
 #first need to check that pop_subsets.keys()<len(df)
 #then check that each subset has at least 20 individuals in it 
 #if any of this is not true, then reduce window size and repeat until it's true
-
 
 
 
@@ -278,6 +279,11 @@ if no matches in the windows, return to step 1, and make window sizes smaller to
 #4) search within the subset for best matches at each position (akin to Deepu's recombination method) and 
     phase at heterozygous positions based on best matches overall for both chromosomes (looking at diplotypes)
 """
+
+
+#build similarity matrix by comparing unknown vs subsets
+#generates boolean which is similarity matrix
+
 
 """
 In terms of the pyro problem of setting up the model: 
@@ -317,6 +323,7 @@ def model_3(sequences, lengths, args, batch_size=None, include_prior=True):
             "probs_y",
             dist.Beta(0.999,0.001).expand([hidden_dim, hidden_dim, data_dim]).to_event(3) #instead of 2,2,2 added hidden_dim, hidden_dim, hidden_dimd
         )
+
     calls_plate = pyro.plate("calls", data_dim, dim=-1)
     with pyro.plate("sequences", num_samples, batch_size, dim=-2) as batch:
         lengths = lengths[batch]

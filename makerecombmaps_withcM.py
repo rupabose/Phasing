@@ -24,8 +24,9 @@ def extract_cM(chr):
         filename_print_pattern="~/testpy/rupasandbox/Chr_maps/Chromosome_{}/recomb_map_chr{}_pop{}"
         df.to_csv(filename_print_pattern.format(chr, chr, pop_slug_new), index=False, sep="\t", line_terminator="\n")
     elapsed_time=start_time - time.time()
-    print(elapsed_time)
+    print("chromosome{} took {} minutes".format(chr,elapsed_time))
 
+#can run the below in iPython or comment the above and run the file
 for chrom in range(1,23):
     chr=chrom
     start_time=time.time()
@@ -48,28 +49,8 @@ for chrom in range(1,23):
         filename_print_pattern="~/testpy/rupasandbox/Chr_maps/Chromosome_{}/recomb_map_chr{}_pop{}"
         df.to_csv(filename_print_pattern.format(chr, chr, pop_slug_new), index=False, sep="\t", line_terminator="\n")
     elapsed_time=(time.time()-start_time)/60
-    print("chromosome{chr} took {elapsed_time} minutes")
+    print("chromosome{} took {} minutes".format(chr,elapsed_time))
 
 
 
 
-
-start_time=time.time()
-pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR', 'GIH', 'GWD', 'IBS', 'ITU', 'KHV', 'LWK', 'MSL', 'MXL', 'PEL', 'PJL', 'PUR', 'STU', 'TSI', 'YRI']
-pop_recomb_maps = {}
-recomb_map_filename_pattern = "~/testpy/rupasandbox/Phasing/hg38/{}/{}_recombination_map_hg38_chr_{}.bed" #place chr of choice in last {}
-for pop_slug in pops:
-    pop_recomb_maps[pop_slug] = pd.read_csv(recomb_map_filename_pattern.format(pop_slug, pop_slug, chr), sep="\t")
-for population in pop_recomb_maps:
-    pop_slug_new=population
-    df=pop_recomb_maps[population]
-    cM_bp= (df['End']-df['Start'])*df['reco_rate_per_base_per_generation']*100
-    cMdist=[]
-    for i in range(len(cM_bp)):
-        cMdist.append(sum(cM_bp[0:i]))
-    del df['#Chromosome']
-    del df['End']
-    del df['reco_rate_per_base_per_generation']
-    df.insert(1,"cM", cMdist)
-    print(time.time()-start_time)
-    print(df)
