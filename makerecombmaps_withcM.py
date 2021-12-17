@@ -19,8 +19,7 @@ def extract_cM(chr):
             cMdist.append(sum(cM_bp[0:i]))
         del df['#Chromosome']
         del df['End']
-        del df['reco_rate_per_base_per_generation']
-        df.insert(1,"cM", cMdist)
+        df.insert(2,"cM", cMdist)
         pop_recomb_maps[population]=df
         filename_print_pattern="~/testpy/rupasandbox/Chr_maps/Chromosome_{}/recomb_map_chr{}_pop{}"
         df.to_csv(filename_print_pattern.format(chr, chr, pop_slug_new), index=False, sep="\t", line_terminator="\n")
@@ -44,8 +43,7 @@ for chrom in range(1,23):
             cMdist.append(sum(cM_bp[0:i]))
         del df['#Chromosome']
         del df['End']
-        del df['reco_rate_per_base_per_generation']
-        df.insert(1,"cM", cMdist)
+        df.insert(2,"cM_cum", cMdist)
 
         filename_print_pattern="~/testpy/rupasandbox/Chr_maps/Chromosome_{}/recomb_map_chr{}_pop{}"
         df.to_csv(filename_print_pattern.format(chr, chr, pop_slug_new), index=False, sep="\t", line_terminator="\n")
