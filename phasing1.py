@@ -323,11 +323,11 @@ def model_3(sequences, lengths, args, batch_size=None, include_prior=True):
     """
     with poutine.mask(mask=include_prior):
         probs_w = pyro.sample(
-            "probs_w", dist.Dirichlet(0.5 * torch.eye(hidden_dim)+0.5).expand([2]).to_event(1) #instead of 0.5, 0.5, we assigned to the hidden_dimdim
+            "probs_w", dist.Binomial(0.5 * torch.eye(hidden_dim)+0.5).expand([2]).to_event(1) #instead of 0.5, 0.5, we assigned to the hidden_dimdim
         )
         # underlying genotype
         probs_x = pyro.sample(
-            "probs_x", dist.Dirichlet(0.5 * torch.eye(hidden_dim)+0.5).expand([2]).to_event(1)
+            "probs_x", dist.Binomial(0.5 * torch.eye(hidden_dim)+0.5).expand([2]).to_event(1)
         )
         # observed genotype
         probs_y = pyro.sample(
