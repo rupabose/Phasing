@@ -32,6 +32,7 @@ from subprocess import check_output
 from sys import argv
 import sys
 
+import definitions_updated_phasing
 
 
 logging.basicConfig(format="%(relativeCreated) 9d %(message)s", level=logging.DEBUG)
@@ -45,13 +46,16 @@ debug_handler.addFilter(filter=lambda record: record.levelno <= logging.DEBUG)
 log.addHandler(debug_handler)
 
 
-
+"""replace the following with the definition of clean_inputs"""
 
 #let's build a super tiny example to work with
-df=pd.read_csv('~/testpy/rupasandbox/phasing_test_file_pairs.csv', sep="\t")
-df_arrays=np.array(df)
-correct_df=df_arrays.transpose()
-correct_df.shape #to check
+# df=pd.read_csv('~/testpy/rupasandbox/phasing_test_file_pairs.csv', sep="\t")
+# df_arrays=np.array(df)
+# correct_df=df_arrays.transpose()
+# correct_df.shape #to check
+
+df=definitions_phasing.clean_inputs('~/testpy/rupasandbox/phasing_test_file_pairs.csv')
+
 
 """
 need to enter in each pair as a set instead of as a string of o or 1
@@ -115,10 +119,11 @@ pops=['ACB', 'ASW', 'BEB', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'ESN', 'FIN', 'GBR
 #pops=['CDX']
 
 pop_recomb_maps = {}
+chr=20
 recomb_map_filename_pattern = "~/testpy/rupasandbox/Phasing/hg38/{}/{}_recombination_map_hg38_chr_{}.bed"
 
 for pop_slug in pops:
-    pop_recomb_maps[pop_slug] = pd.read_csv(recomb_map_filename_pattern.format(pop_slug, pop_slug), sep="\t")
+    pop_recomb_maps[pop_slug] = pd.read_csv(recomb_map_filename_pattern.format(pop_slug, pop_slug, chr), sep="\t")
 #for the maps, convert recombination rate to centimorgans using simple arithmetic
 #((end-start)*recombination rate per bp * 100)=cM 
 for population in pop_recomb_maps:
@@ -244,26 +249,33 @@ for i in range(len(windowpoints)-1):
     if a sample has an almost same pattern 001000 we allow some mismatch and looseness with recombination/mutation term?
 
 """
-pop_subsets={} 
-for (windowstart,windowend) in windows: #iterating through each window
-    for individual in df:
-        individualdf=df[individual] #so we can iterate through the genotype calls of each individual easily
-        individual_window_df=individualdf[windowstart:windowend]
-        homozyg_sig='' #starting a new homozygous signature as a string, which represents the homozyg pattern of this individual
-        for g1,g2 in individual_window_df:
-            if g1==g2: #true if it is homozygous (e.g. 0,0 or 1,1)
-                homozyg_sig+=f"{newdf['POS']}|{g1}" #we store position and the call, 0 or 1 for ref/alt
-        if pop_subsets.get(homozyg_sig) is None: #if this specific homozyg pattern in this window is not already represented, we add it
-            pop_subsets[homozyg_sig]=[individual] #we also add the individual under it
-        else:
-            pop_subsets[homozyg_sig].append(individual) #if this is already represented in the dict, then we just store that the individual has it too
+def window_search(windows,reference_samples):
+    pop_subsets={} 
+    for (windowstart,windowend) in windows: #iterating through each window
+        for individual in reference_samples:
+            individual_ref=reference_samples[individual] #so we can iterate through the genotype calls of each individual easily
+            individual_window_ref=individual_ref[windowstart:windowend]
+            homozyg_sig='' #starting a new homozygous signature as a string, which represents the homozyg pattern of this individual
+            for g1,g2 in individual_window_ref:
+                if g1==g2: #true if it is homozygous (e.g. 0,0 or 1,1)
+                    homozyg_sig+=f"{individual_ref['POS']}|{g1}" #we store position and the call, 0 or 1 for ref/alt
+            if pop_subsets.get(homozyg_sig) is None: #if this specific homozyg pattern in this window is not already represented, we add it
+                pop_subsets[homozyg_sig]=[individual] #we also add the individual under it
+            else:
+                pop_subsets[homozyg_sig].append(individual) #if this is already represented in the dict, then we just store that the individual has it too
+    return pop_subsets
 
 
-"""
-if no matches in the windows, return to step 1, and make window sizes smaller to start, then continue through step 2
-"""
+class phasing_search_model():
+    def match_find_v2(pop_subsets, unknown_phase_samples):
+        for homozygous_sig in pop_subsets:
+            pass
+
+
+    """
+    if no matches in the windows, return to step 1, and make window sizes smaller to start, then continue through step 2
+    """
 #search through pop_subsets 
-for (windowstart, windowend):
 
 #first need to check that pop_subsets.keys()<len(df)
 #then check that each subset has at least 20 individuals in it 
@@ -279,7 +291,6 @@ for (windowstart, windowend):
 #4) search within the subset for best matches at each position (akin to Deepu's recombination method) and 
     phase at heterozygous positions based on best matches overall for both chromosomes (looking at diplotypes)
 """
-
 
 #build similarity matrix by comparing unknown vs subsets
 #generates boolean which is similarity matrix
@@ -321,8 +332,9 @@ def model_3(sequences, lengths, args, batch_size=None, include_prior=True):
         # observed genotype
         probs_y = pyro.sample(
             "probs_y",
-            dist.Beta(0.999,0.001).expand([hidden_dim, hidden_dim, data_dim]).to_event(3) #instead of 2,2,2 added hidden_dim, hidden_dim, hidden_dimd
+            dist.Beta(0.99,0.01).expand([hidden_dim, hidden_dim, data_dim]).to_event(3) #instead of 2,2,2 added hidden_dim, hidden_dim, hidden_dimd
         )
+
 
     calls_plate = pyro.plate("calls", data_dim, dim=-1)
     with pyro.plate("sequences", num_samples, batch_size, dim=-2) as batch:
