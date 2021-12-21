@@ -32,15 +32,34 @@ from subprocess import check_output
 from sys import argv
 import sys
 
-def clean_inputs(filename): #input file can be a file with the samples as column headers and the columns being the genotype calls at positions indicated by the rows
-    #the input file is rearranged into a form that the phasing model and pyro can work with
+def read_in_file(filename): #if using a cleaned up ref file as made in make_ref_file
     df=pd.read_csv(filename, sep="\t")
     df_arrays=np.array(df)
     correct_df=df_arrays.transpose()
-    sample_names=df.columns
-    clean_input=np.insert(correct_df, 0, sample_names, axis=1)
+    indiv_names=df.columns
+    clean_input=np.insert(correct_df, 0, indiv_names, axis=1)
+    return correct_df
+def individual_names(filename):
+    df=pd.read_csv(filename, sep="\t")
+    indiv_names=df.columns
+    return indiv_names
+def cleaned_input(filename):
+    correct_df=read_in_file(filename)
+    indiv_names=individual_names(filename)
+    clean_input=np.insert(correct_df, 0, indiv_names, axis=1)
     return clean_input
-    #result of this is the cleaned up samples, with the correct sample names for each array of genotype calls
+#result of this is the cleaned up samples, with the correct sample names for each array of genotype calls
+def clean_input(filename):
+    reference_file=read_in_file(filename)
+    reference_positions=positions_bp
+    ref_names=individual_names(filename)
+    newarrayshape=reference_file.shape
+    newdf=np.zeros(list(newarrayshape) + [2])
+    for i, element in enumerate(correct_df):
+        for j, w in enumerate(element):
+            newdf[i][j]=[int(call) for call in w.split(',')]
+    cleaned_input_ref=newdf
+    return cleaned_input_ref
 
 class reference_panel():
     def make_ref_file(filename, header_position): #for 1kg files, header=95
@@ -51,20 +70,39 @@ class reference_panel():
         #at this point we have a VCF file in the dataframe with only the samples and calls, and the position
         return df
 
-    def ref_call_positions_bp(df): #store the positions and remove them from the data frame
+    def ref_call_positions_bp(filename, header_position): #store the positions and remove them from the data frame
+        df=self.make_ref_file(filename, header_position)
         positions_bp=df['POS']
         del df['POS']
         ref_sample_df=df
         return ref_sample_df
+        return positions_bp
 
-    def reference_panel_input(ref_sample_df):
-        reference_samples=clean_inputs(ref_sample_df)
-        reference_positions=
+    def reference_panel_input(ref_sample_df, positions_bp):
+        reference_file=clean_inputs(ref_sample_df)
+        ref_df=reference_file.correct_dfdf
+        reference_positions=positions_bp
+        ref_names=clean_inputs(ref_sample_df)
+        newarrayshape=correct_df.shape
+        newdf=np.zeros(list(newarrayshape) + [2])
+        for i, element in enumerate(correct_df):
+        for j, w in enumerate(element):
+        newdf[i][j]=[int(call) for call in w.split(',')]
 
-class positions_for_calls():
-    def ref_positions():
 
-    def sample_positions():
+class samples_from_file(filename):
+    def make_sample_file(filename, header_position):
+        df=pd.read_csv(filename, header=header_position, sep='\t')
+        del df['#CHROM'] # assuming VCF #this may need to change depending on file 
+        dropcol=newdf.columns[1:8] #removes the non POS columns before the sample columns with the genotype calls
+        df=df.drop(dropcol, axis=1)
+        sample_positions_bp=df['POS']
+        #at this point we have a VCF file in the dataframe with only the samples and calls, and the position
+        return df, sample_positions_bp
+    def sample_indiv(sample_file):
+        sample_df=clean_inputs(sample_file)
+        return sample_df
+    def get_call_pairs(sample_df)):
 
 
 def windowing(chr, window_size):
