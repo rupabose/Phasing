@@ -69,10 +69,10 @@ class reference_panel():
     def make_ref_file(self): #for 1kg files, header=95
         df=pd.read_csv(self.filename, header=self.header_position, sep='\t')
         del df['#CHROM']
-        dropcol=newdf.columns[1:8] #removes the non POS columns before the sample columns with the genotype calls
-        self.df=df.drop(dropcol, axis=1)
-        #at this point we have a VCF file in the dataframe with only the samples and calls, and the position
-        return df
+        dropcol=df.columns[1:8] #removes the non POS columns before the sample columns with the genotype calls
+        df=df.drop(dropcol, axis=1)
+        self.df=df#at this point we have a VCF file in the dataframe with only the samples and calls, and the position
+        return self.df
 
     def ref_call_positions_bp(self): #store the positions and remove them from the data frame
         df=self.make_ref_file(self.filename, self.header_position)
@@ -90,23 +90,26 @@ class reference_panel():
         newarrayshape=correct_df.shape
         newdf=np.zeros(list(newarrayshape) + [2])
         for i, element in enumerate(correct_df):
-        for j, w in enumerate(element):
-        newdf[i][j]=[int(call) for call in w.split(',')]
+            for j, w in enumerate(element):
+                newdf[i][j]=[int(call) for call in w.split(',')]
+        self.reference_panel=newdf
 
 
 class samples_from_file(filename):
     def make_sample_file(filename, header_position):
         df=pd.read_csv(filename, header=header_position, sep='\t')
         del df['#CHROM'] # assuming VCF #this may need to change depending on file 
+        sample_positions_bp=df['POS']
         dropcol=newdf.columns[1:8] #removes the non POS columns before the sample columns with the genotype calls
         df=df.drop(dropcol, axis=1)
-        sample_positions_bp=df['POS']
+        
+        self.get_sample_POS=sample_positions_bp
         #at this point we have a VCF file in the dataframe with only the samples and calls, and the position
         return df, sample_positions_bp
     def sample_indiv(sample_file):
         sample_df=clean_inputs(sample_file)
         return sample_df
-    def get_call_pairs(sample_df):
+
 
 class windows_phasing():
     def __init__(self, chrom, window_size, reference_panel, samples_input):
@@ -121,7 +124,7 @@ class windows_phasing():
         *can build this into a variable size or sliding window definition
         """
         filename_pattern='~/testpy/rupasandbox/hapmap_recombination_rate_hg38/hapmap_recomb_hg38_chr{}.txt'
-        recomb_hapmap=pd.read_csv(filename_pattern.format(self.chrom), sep=" ")
+        self.recomb_hapmap=pd.read_csv(filename_pattern.format(self.chrom), sep=" ")
         x1=0
         x2=25
         window_cM=window_size
@@ -129,12 +132,12 @@ class windows_phasing():
         windowpoints=[]
         windowpoints_bp=[]
         for element in listcM:
-            for i in range(len(recomb_hapmap)):
-                if recomb_hapmap['Genetic_Map(cM)'][i]>element and recomb_hapmap['Genetic_Map(cM)'][i-1]<element :
-                    windowpoints.append(recomb_hapmap['Genetic_Map(cM)'][i])
-                    windowpoints_bp.append(recomb_hapmap['position'][i])
-        windowpoints.append(recomb_hapmap['Genetic_Map(cM)'][len(recomb_hapmap)-1])
-        windowpoints_bp.append(recomb_hapmap['position'][len(recomb_hapmap)-1])
+            for i in range(len(self.recomb_hapmap)):
+                if self.recomb_hapmap['Genetic_Map(cM)'][i]>element and self.recomb_hapmap['Genetic_Map(cM)'][i-1]<element :
+                    windowpoints.append(self.recomb_hapmap['Genetic_Map(cM)'][i])
+                    windowpoints_bp.append(self.recomb_hapmap['position'][i])
+        windowpoints.append(self.recomb_hapmap['Genetic_Map(cM)'][len(self.recomb_hapmap)-1])
+        windowpoints_bp.append(self.recomb_hapmap['position'][len(self.recomb_hapmap)-1])
 
         windows=[]
         windows_bp=[]
@@ -146,7 +149,7 @@ class windows_phasing():
         self.windows=windows
         self.windows_bp=windows_bp
 
-    def window_search(windows_bp,reference_samples): # we are searching within the positions that indicate the ()cM window
+    def window_search(self): # we are searching within the positions that indicate the ()cM window
         """
         INPUTS: 
         the windows_bp defines the BP positions which bound each ()cM window
@@ -163,7 +166,7 @@ class windows_phasing():
         pop_subsets={} 
         for (windowstart,windowend) in self.windows_bp: #iterating through each window
             for individual in self.reference_samples: #going individual by individual in the reference panel
-                individual_ref=reference_samples[individual] #so we can iterate through the genotype calls of each individual easily
+                individual_ref=self.reference_samples[individual] #so we can iterate through the genotype calls of each individual easily
                 individual_window_ref=individual_ref[windowstart:windowend]
                 homozyg_sig='' #starting a new homozygous signature as a string, which represents the homozyg pattern of this individual
                 for g1,g2 in individual_window_ref:
