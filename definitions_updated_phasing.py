@@ -97,7 +97,7 @@ class split_test_train():
         self.filename=filename
         self.header=header_position
 
-    def decision_tree(self):
+    def decision_tree():
 
 
 
